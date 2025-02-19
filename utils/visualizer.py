@@ -14,7 +14,10 @@ class Visualizer:
         fig.update_layout(
             xaxis_title=x_column,
             yaxis_title=y_column,
-            template='plotly_white'
+            template='plotly_dark',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font_color='#FAFAFA'
         )
         return fig
 
@@ -28,7 +31,10 @@ class Visualizer:
         fig.update_layout(
             xaxis_title=x_column,
             yaxis_title=', '.join(y_columns),
-            template='plotly_white'
+            template='plotly_dark',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font_color='#FAFAFA'
         )
         return fig
 
@@ -45,6 +51,9 @@ class Visualizer:
         fig.update_layout(
             xaxis_title=x_column,
             yaxis_title=y_column,
-            template='plotly_white'
+            template='plotly_dark',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font_color='#FAFAFA'
         )
         return fig

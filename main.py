@@ -6,9 +6,68 @@ import io
 
 
 
-import pandas as pd
+
 import numpy as np
 from typing import Union, Optional
+
+
+
+import google.generativeai as genai
+
+
+import os
+
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
+from typing import List, Optional
+
+class DataChatAnalyzer:
+    def __init__(self):
+        api_key = os.getenv('GEMINI_API_KEY')
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel('gemini-pro')
+        self.chat = self.model.start_chat(history=[])
+
+    def analyze_data(self, df: pd.DataFrame, user_query: str) -> str:
+        """Generate insights about the data based on user query."""
+        try:
+            # Create a data summary
+            data_info = (
+                f"DataFrame Info:\n"
+                f"- Shape: {df.shape}\n"
+                f"- Columns: {', '.join(df.columns)}\n"
+                f"- Data Types:\n{df.dtypes.to_string()}\n\n"
+                f"First few rows:\n{df.head().to_string()}\n\n"
+                f"Summary Statistics:\n{df.describe().to_string()}\n"
+            )
+
+            # Prepare the prompt
+            prompt = f"""
+            As a data analysis assistant, help me analyze this dataset:
+            
+            {data_info}
+            
+            User Question: {user_query}
+            
+            Please provide a clear and concise analysis based on the data and the  question.
+            """
+
+            # Get response from Gemini
+            response = self.chat.send_message(prompt)
+            return response.text
+            
+        except Exception as e:
+            return f"Error analyzing data: {str(e)}"
+
+    def get_chat_history(self):
+        """Return the chat history."""
+        return [(msg.parts[0].text, msg.role) for msg in self.chat.history]
+
+
+
+
+
 
 class DataProcessor:
     @staticmethod
@@ -68,10 +127,7 @@ class DataProcessor:
 
 
 
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-from typing import List, Optional
+
 
 class Visualizer:
     @staticmethod
@@ -84,7 +140,10 @@ class Visualizer:
         fig.update_layout(
             xaxis_title=x_column,
             yaxis_title=y_column,
-            template='plotly_white'
+            template='plotly_dark',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font_color='#FAFAFA'
         )
         return fig
 
@@ -98,7 +157,10 @@ class Visualizer:
         fig.update_layout(
             xaxis_title=x_column,
             yaxis_title=', '.join(y_columns),
-            template='plotly_white'
+            template='plotly_dark',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font_color='#FAFAFA'
         )
         return fig
 
@@ -115,11 +177,12 @@ class Visualizer:
         fig.update_layout(
             xaxis_title=x_column,
             yaxis_title=y_column,
-            template='plotly_white'
+            template='plotly_dark',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font_color='#FAFAFA'
         )
         return fig
-
-
 
 
 def main():
@@ -128,6 +191,12 @@ def main():
         page_icon="📊",
         layout="wide"
     )
+
+    # Initialize session state for chat
+    if 'chat_analyzer' not in st.session_state:
+        st.session_state.chat_analyzer = DataChatAnalyzer()
+    if 'chat_messages' not in st.session_state:
+        st.session_state.chat_messages = []
 
     st.title("📊 Data Processing & Visualization Tool")
     st.write("Upload, clean, visualize, and export your data with ease!")
@@ -151,7 +220,7 @@ def main():
 
             # Load and preview data
             df = DataProcessor.load_data(uploaded_file)
-            
+
             st.header("2. Data Preview")
             preview_cols = st.multiselect(
                 "Select columns to preview",
@@ -164,12 +233,12 @@ def main():
             st.header("3. Data Cleaning")
             with st.expander("Clean your data"):
                 remove_duplicates = st.checkbox("Remove duplicate entries")
-                
+
                 fill_missing = st.selectbox(
                     "Handle missing values",
                     options=[None, 'mean', 'median', 'mode', 'custom']
                 )
-                
+
                 fill_value = None
                 if fill_missing == 'custom':
                     fill_value = st.text_input("Enter custom value for missing data")
@@ -193,7 +262,7 @@ def main():
                 )
 
                 numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
-                
+
                 if viz_type == 'Bar Chart':
                     x_col = st.selectbox("Select X-axis column", options=df.columns.tolist())
                     y_col = st.selectbox("Select Y-axis column", options=numeric_cols)
@@ -212,14 +281,41 @@ def main():
                 elif viz_type == 'Scatter Plot':
                     x_col = st.selectbox("Select X-axis column", options=numeric_cols)
                     y_col = st.selectbox("Select Y-axis column", options=numeric_cols)
-                    color_col = st.selectbox("Select color column (optional)", 
-                                           options=[None] + df.columns.tolist())
+                    color_col = st.selectbox("Select color column (optional)",
+                                              options=[None] + df.columns.tolist())
                     title = st.text_input("Enter chart title", "Scatter Plot")
                     fig = Visualizer.create_scatter_plot(df, x_col, y_col, color_col, title)
                     st.plotly_chart(fig, use_container_width=True)
 
-            # Export sectionn
-            st.header("5. Export Data")
+            # Add new Data Chat Analysis section
+            st.header("5. Data Analysis Chat")
+            with st.expander("Chat with your data"):
+                if 'df' in locals():  # Check if data is loaded
+                    st.write("Ask questions about your data and get AI-powered insights!")
+
+                    # Display chat history
+                    for message in st.session_state.chat_messages:
+                        with st.chat_message(message["role"]):
+                            st.write(message["content"])
+
+                    # Chat input
+                    if prompt := st.chat_input("Ask about your data..."):
+                        # Display user message
+                        with st.chat_message("user"):
+                            st.write(prompt)
+                        st.session_state.chat_messages.append({"role": "user", "content": prompt})
+
+                        # Get and display assistant response
+                        with st.chat_message("assistant"):
+                            response = st.session_state.chat_analyzer.analyze_data(df, prompt)
+                            st.write(response)
+                        st.session_state.chat_messages.append({"role": "assistant", "content": response})
+
+                else:
+                    st.warning("Please upload and process data first to use the chat feature.")
+
+            # Export section (now section 6)
+            st.header("6. Export Data")
             with st.expander("Export your data"):
                 export_format = st.selectbox(
                     "Select export format",
