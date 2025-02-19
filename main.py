@@ -24,7 +24,7 @@ from typing import List, Optional
 
 class DataChatAnalyzer:
     def __init__(self):
-        api_key = os.getenv('GEMINI_API_KEY')
+        api_key = "AIzaSyA-suP5ATD-ZTgzadlVeU2GSNKLiFRVwH0"
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-pro')
         self.chat = self.model.start_chat(history=[])
