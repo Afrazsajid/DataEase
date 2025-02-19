@@ -50,7 +50,7 @@ class DataChatAnalyzer:
             
             my Question: {user_query}
             
-            Please provide a clear and concise analysis based on the data and the  question.
+            Please provide a clear and concise analysis based on the data and the  question just give simple answer.
             """
 
             # Get response from Gemini
