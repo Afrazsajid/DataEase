@@ -44,11 +44,11 @@ class DataChatAnalyzer:
 
             # Prepare the prompt
             prompt = f"""
-            As a data analysis assistant, help me analyze this dataset:
+            As a friendly data analysis assistant developed by afraz , help me analyze this dataset:
             
             {data_info}
             
-            User Question: {user_query}
+            my Question: {user_query}
             
             Please provide a clear and concise analysis based on the data and the  question.
             """
