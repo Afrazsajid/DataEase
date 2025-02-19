@@ -225,7 +225,7 @@ def main():
             preview_cols = st.multiselect(
                 "Select columns to preview",
                 options=df.columns.tolist(),
-                default=df.columns.tolist()[:5]
+                default=df.columns.tolist()
             )
             st.dataframe(df[preview_cols].head())
 
