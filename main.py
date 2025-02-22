@@ -43,7 +43,7 @@ class DataChatAnalyzer:
             )
 
             # Prepare the prompt
-            prompt = f""" you are afraz ai
+            prompt = f""" you are afraz's ai
             As a friendly data analysis assistant developed by afraz , help me analyze this dataset:
             
             {data_info}
